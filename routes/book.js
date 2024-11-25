@@ -5,14 +5,16 @@ var router = express.Router();
 var dbSize = db.size;
 
 router.get("/", function (req, res) {
-  if (dbSize < 0) res.json({ message: "책이 존재하지 않습니다." });
+  if (dbSize < 0) {
+    res.status(200).json({ message: "책이 존재하지 않습니다." });
+  }
   const dbArray = Array.from(db.values());
   const dbObj = {};
   dbArray.forEach((data) => {
     dbObj[data.id] = data;
   });
 
-  res.json(dbObj);
+  res.status(200).json(dbObj);
 });
 
 router.get("/:id", function (req, res) {
@@ -25,19 +27,20 @@ router.get("/:id", function (req, res) {
     }) > -1;
 
   if (isExist === false)
-    return res.json({ message: "존재하지 않는 책 입니다." });
+    return res.status(200).json({ message: "존재하지 않는 책 입니다." });
 
-  res.json(dbArray[id - 1]);
+  res.status(200).json(dbArray[id - 1]);
 });
 
 router.post("/", function (req, res) {
   const { title, subTitle, description, author } = req.body;
   const dbArray = Array.from(db.values());
-
   const id = dbArray.pop().id + 1;
+  const checkReqBodyData = title && subTitle && description && author;
 
-  if ((title && subTitle && description && author) === undefined)
-    res.json({ message: "데이터가 부족합니다." });
+  if (checkReqBodyData === undefined) {
+    res.status(400).json({ message: "데이터가 부족합니다." });
+  }
 
   const data = {
     id,
@@ -49,7 +52,7 @@ router.post("/", function (req, res) {
 
   db.set(id, data);
 
-  res.json(data);
+  res.status(201).json(data);
 });
 
 router.delete("/:id", function (req, res) {
@@ -57,7 +60,9 @@ router.delete("/:id", function (req, res) {
   const dbArray = Array.from(db.values());
   const isExist = dbArray.find((data) => data.id === id);
 
-  if (isExist) res.json({ message: "존재하지 않는 책 입니다." });
+  if (isExist) {
+    res.status(400).json({ message: "존재하지 않는 책 입니다." });
+  }
 
   const filterDbArray = dbArray.filter((data) => {
     return parseInt(data.id) !== parseInt(id);
@@ -72,7 +77,7 @@ router.delete("/:id", function (req, res) {
     db.set(index, data);
   });
 
-  res.json({
+  res.status(200).json({
     message: "데이터가 삭제되었습니다.",
   });
 });
